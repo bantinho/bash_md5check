@@ -5,9 +5,10 @@
 #
 #
 # importing config file
-source ./color.sh
-source ./chk_config.sh
-source ./functions.sh
+WORK="$(dirname $0)/"
+source ${WORK}color.sh
+source ${WORK}chk_config.sh
+source ${WORK}functions.sh
 
 declare -A config
 TODAY=$(date +"%Y%m%d-%H%M")
@@ -55,6 +56,9 @@ done
 config[SOURCE_DIR]="$(chk_directory "source" "${config[SOURCE_DIR]}" | xargs )"
 config[TARGET_DIR]="$(chk_directory "target" "${config[TARGET_DIR]}" | xargs )"
 
+# define checksum file for target dir
+MD=${config[TARGET_DIR]%/}
+CHECKSUMS_TARGET="${config[MD5_DIR]}${MD##*/}.md5"
 
 # print configuration for this run and ask user for permission
 # permission is not necessary if the -y option was set
@@ -63,7 +67,7 @@ if [[ ! ${config[PERMISSIVE]} -eq 1 ]]; then
   MSG="\n${YELLOW}Please check your configuration:${RESET} \n\
 ${BLUE}[SOURCE_DIR]${GREEN}\t${config[SOURCE_DIR]}\t${GREY}This is the folder that might contain duplicates.${RESET} \n\
 ${BLUE}[TARGET_DIR]${GREEN}\t${config[TARGET_DIR]}\t${GREY}This is the folder the files are supposed to be merged in to.${RESET} \n${BLUE}[CHECKSUM_SAVE]\t"
-  [[ ${config[MD5_DIR]} == "/tmp/" ]] && MSG="${MSG}${YELLOW}Off\t${GREY}Delete file checksums from TARGET after use${RESET} \n" || MSG="${MSG}${GREEN}Checksum files will be saved to ~/.checksums${RESET}  \n"   
+  [[ ${config[MD5_DIR]} == "/tmp/" ]] && MSG="${MSG}${YELLOW}Off\t${GREY}Delete file checksums from TARGET after use${RESET} \n" || MSG="${MSG}${GREEN}Checksum files will be saved to ${CHECKSUMS_TARGET}${RESET}  \n"   
 
   if [[ ${config[VERBOSE]} -eq 1 ]]; then
     # CLEAN_TARGET
@@ -104,10 +108,6 @@ fi
 #
 #================================================================
 
-# define checksum file for target dir
-MD=${config[TARGET_DIR]%/}
-CHECKSUMS_TARGET="${config[MD5_DIR]}${MD##*/}.md5"
-
 # remove any old MD5 file in tmp directory
 [[ ${config[MD5_DIR]} == "/tmp/" ]] && rm -rf "${CHECKSUMS_TARGET}"
 
@@ -134,6 +134,8 @@ else
 fi
 [[ $? -eq 0 ]] && printf "${SUCCESS}\n" || printf "%s Code: %s\n" "${ERROR}" "${?}"
 #... done with target dir
+
+exit 0
 
 #....................
 # Clean and compare MD5s for SOURCE DIR

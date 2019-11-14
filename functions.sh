@@ -53,7 +53,6 @@ create_md5_checksums() {
   [[ -z $1 ]] && return 1 || TARGET=${1}
   [[ -z $2 ]] && return 1 || MD5_FILE=${2}
 
-  
 
   # get the current file from md5sum file. grep will return 0 if it is there are it will return 1 if it wasn't found
   #if [[ cat ${CHECKSUMS_TARGET} | grep -q "/home/daniel/Downloads/inactive/testing/target/2019-10-22_Filsona.md"
@@ -61,24 +60,24 @@ create_md5_checksums() {
   find "${TARGET}" -type f 2>/dev/null | while read file; do
     # reading hash and file name into array
     # [0] = hash, [1] = path/filename, [2] = filename
-    read -r -a HASH <<< "$(md5sum "${file}")"
-    HASH=("${HASH[@]}" "$(get_base ${HASH[1]})")
+    
+    HASH="$(md5sum "${file}" | awk '{print $1}')"
 
     # check if file exists in md5sum file, returns 0 if found
-    cat ${MD5_FILE} | grep -q "${HASH[2]}"
+    cat ${MD5_FILE} | grep -q "${file}"
     if [[ $? -eq 0 ]]; then
 
       # check if md5 sum is found in md5sum file, returns 0 if found
       # don't do anything if the md5 sum already exists
       #
       # delete line from file if the md5 sums don't match and append the new one
-      cat ${MD5_FILE} | grep -q "${HASH[0]}"
+      cat ${MD5_FILE} | grep -q "${HASH}"
       if [[ ! $? -eq 0 ]]; then 
-        grep -v "${HASH[1]}" "${MD5_FILE}" > "/tmp/md5temp" && mv "/tmp/md5temp" "${MD5_FILE}" && printf "%s\x20\x20%s\n" >> "${MD5_FILE}" "${HASH[0]}" "${HASH[1]}"
+        grep -v "${file}" "${MD5_FILE}" > "/tmp/md5temp" && mv "/tmp/md5temp" "${MD5_FILE}" && printf "%s\x20\x20%s\n" >> "${MD5_FILE}" "${HASH}" "${file}"
       fi
     else 
       # append new file to the checksum file
-      printf "%s\x20\x20%s\n" >> "${MD5_FILE}" "${HASH[0]}" "${HASH[1]}"
+      printf "%s\x20\x20%s\n" >> "${MD5_FILE}" "${HASH}" "${file}"
     fi
   done
   return 0
