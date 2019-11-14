@@ -4,15 +4,15 @@
 # Created: 2019-10-28
 #
 #
-# importing config file
+# importing 
 WORK="$(dirname $0)/"
 source ${WORK}color.sh
 source ${WORK}chk_config.sh
 source ${WORK}functions.sh
 
-declare -A config
-TODAY=$(date +"%Y%m%d-%H%M")
-START_TIME=$(date +%s)
+# setting a few variable
+declare -A config # array that will cotain all the options for the script
+START_TIME=$(date +%s) # scripts starts
 
 #================================================================
 #
@@ -135,7 +135,6 @@ fi
 [[ $? -eq 0 ]] && printf "${SUCCESS}\n" || printf "%s Code: %s\n" "${ERROR}" "${?}"
 #... done with target dir
 
-exit 0
 
 #....................
 # Clean and compare MD5s for SOURCE DIR
@@ -144,6 +143,17 @@ printf "%s Cleaning up SOURCE" "${INFO}"
 clean_directory "${config[SOURCE_DIR]}"
 [[ $? -eq 0 ]] && printf "%s\n" "${DONE}" || printf "%s Code: %s\n" "${ERROR}" "${?}"
 
+#....................
+# Create IMPORT_DIR if non-duplicate files are being moved to TARGET i.e. "-m" was not set as option
+# Check if IMPORT_DIR could be created otherwise fall back to not moving files to TARGET
+#....................
+IMPORT_DIR="${config[TARGET_DIR]}/.import/$(date +"%Y%m%d-%H%M")"
+
+[[ ${config[MOVE]} -eq 1 ]] && mkdir -p "${IMPORT_DIR}" 2>/dev/null
+if [[ ${config[MOVE]} -eq 1 ]] && [[ ! -d "${IMPORT_DIR}"  ]]; then 
+  config[MOVE]=0 
+  printf "\n%sThe target folder can not be written to. Falling back to keeping non-duplicate files in SOURCE (%s) %s\n" "${YELLOW}" "${config[SOURCE_DIR]}" "${RESET}"
+fi
 
 # comparing files from both folders
 # delete from SOURCE if they match
@@ -171,33 +181,36 @@ find "${config[SOURCE_DIR]}" -type f 2>/dev/null | while read file; do
       [[ $? -eq 1 ]] && printf "%s Couldn't delete %s\n%sCode: %s\n" "${ERROR}" "${FILE[RELPATH]:-"./"}${FILE[FNAME]}" "${ERROR}" "${?}"
 
       if [[ ${config[VERBOSE]} -eq 1 ]] && [[ $? -eq 0 ]]; then  
-        printf "%s duplicate file %s\n" "${DELETE}" "${SUCCESS}"      
+        printf "%s duplicate file %s\n" "${DELETE}" "${SUCCESS}"  
+        FILES_DELETED=$(( ${FILES_DELETED} + 1 ))    
       fi
     fi
-
-
   else
+
     if [[ ${config[MOVE]} -eq 1 ]]; then 
       if [[ ${config[VERBOSE]} -eq 1 ]]; then  
         printf "%s new file " "${MOVE}"     
       fi
-      # if it doesn't exists move it to import folder in target dir
 
-      
-      MV2_IMPORT="${config[TARGET_DIR]}.import/${TODAY}/${FILE[RELPATH]:-"./"}"
-      mkdir -p "${MV2_IMPORT}" && mv "${file}" "$_"
+      MV2_IMPORT="${IMPORT_DIR}/${FILE[RELPATH]:-"./"}"
+      # if it doesn't exists move it to import folder in target dir
+      mkdir -p "${MV2_IMPORT}" && mv "${file}" $_
       if [[ ${config[VERBOSE]} -eq 1 ]] && [[ $? -eq 0 ]]; then  
         printf "%s\n" "${SUCCESS}"  
       fi
       
+      FILES_MOVED=$(( ${FILES_MOVED} + 1 )) 
       [[ $? -eq 1 ]] && printf "%s Couldn't move to import directory %s\n%sCode: %s\n" "${ERROR}" "${FILE[RELPATH]:-"./"}${FILE[FNAME]}" "${ERROR}" "${?}" 
     fi
   fi
+
 done
 # if output is set to quiet the output would be missing a done notification
 [[ ${config[VERBOSE]} -eq 0 ]] && printf "%s\n" "${DONE}"
 
 # ///// END TESTING
+
+
 
 #================================================================
 #
