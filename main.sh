@@ -32,10 +32,10 @@ config[PERMISSIVE]=0 # ask user for permissions to use config
 while [ -n "${1}" ]; do 
  
     case "${1}" in
-    -d) config[DELETE]=0 ;;
-    -D) config[CLEAN_TARGET]=1 ;;
-    -m) config[MOVE]=0 ;;
-    -M) config[MD5]=1 ;;
+    -r) config[DELETE]=0 ;;
+    -d) config[CLEAN_TARGET]=1 ;;
+    -k) config[MOVE]=0 ;;
+    -m) config[MD5]=1 ;;
     -v) config[VERBOSE]=1 ;;
     -y) config[PERMISSIVE]=1 ;;
     --help) printf "${HELP_MSG}" && exit 0;;
