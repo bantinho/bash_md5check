@@ -24,10 +24,15 @@ The assumption is that you have a SOURCE folder which contains files that you wa
 The following options are available to change the default behavior of the script:
  
   -r) Retain duplicate files in SOURCE folder. Default: delete them. 
+
   -d) Delete empty folders and metadata files from TARGET. On default only SOURCE will be cleaned of those files and folders 
+
   -k) Keep unmatched files in SOURCE and don't move them to the import folder in TARGET 
+
   -m) The default MD5 Checksum file will created in /tmp, i.e. will not be saved. Activate this option if you want to save the MD5 Checksum file for referencing it later. It will be saved to ~/.checksums 
+
   -v) Verbose - Show additional information during the run of the script 
+  
   -y) Assume 'yes' to all. Great for running it as a cron job etc.
 
   --help) Show this help message 
